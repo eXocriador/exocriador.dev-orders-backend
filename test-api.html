@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Тестування API - eXocriador Backend</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #555;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+      input:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .response {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 5px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+      }
+      .info {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+      }
+      .endpoints {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+      .endpoint {
+        margin-bottom: 10px;
+        padding: 10px;
+        background: white;
+        border-left: 4px solid #007bff;
+        border-radius: 3px;
+      }
+      .method {
+        font-weight: bold;
+        color: #007bff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧪 Тестування API - eXocriador Backend</h1>
+
+      <div class="endpoints">
+        <h3>📡 Доступні Endpoints:</h3>
+        <div class="endpoint">
+          <span class="method">GET</span> /api/health - Перевірка стану сервера
+        </div>
+        <div class="endpoint">
+          <span class="method">POST</span> /api/contact - Створення контакту
+        </div>
+        <div class="endpoint">
+          <span class="method">GET</span> /api/contact - Отримання всіх
+          контактів
+        </div>
+        <div class="endpoint">
+          <span class="method">GET</span> /api/contact/stats - Статистика
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="apiUrl">🔗 API URL:</label>
+        <input
+          type="text"
+          id="apiUrl"
+          value="http://localhost:3001"
+          placeholder="http://localhost:3001"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="name">👤 Ім'я:</label>
+        <input
+          type="text"
+          id="name"
+          placeholder="Ваше ім'я"
+          value="Тестовий користувач"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="email">📧 Email:</label>
+        <input
+          type="email"
+          id="email"
+          placeholder="your.email@example.com"
+          value="test@example.com"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="message">💬 Повідомлення:</label>
+        <textarea id="message" rows="4" placeholder="Ваше повідомлення">
+Це тестове повідомлення для перевірки API eXocriador Backend. Перевіряю функціональність контактної форми.</textarea
+        >
+      </div>
+
+      <div class="form-group">
+        <button onclick="testHealth()">🏥 Тест Health</button>
+        <button onclick="testCreateContact()">📝 Створити контакт</button>
+        <button onclick="testGetContacts()">📋 Отримати контакти</button>
+        <button onclick="testGetStats()">📊 Статистика</button>
+        <button onclick="clearResponse()">🧹 Очистити</button>
+      </div>
+
+      <div id="response" class="response info" style="display: none">
+        Натисніть кнопку для тестування API...
+      </div>
+    </div>
+
+    <script>
+      const apiUrl = document.getElementById('apiUrl');
+      const name = document.getElementById('name');
+      const email = document.getElementById('email');
+      const message = document.getElementById('message');
+      const response = document.getElementById('response');
+
+      function showResponse(data, type = 'info') {
+        response.style.display = 'block';
+        response.className = `response ${type}`;
+        response.textContent =
+          typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+      }
+
+      function clearResponse() {
+        response.style.display = 'none';
+      }
+
+      async function makeRequest(url, options = {}) {
+        try {
+          const response = await fetch(url, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...options.headers,
+            },
+            ...options,
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            showResponse(data, 'success');
+          } else {
+            showResponse(data, 'error');
+          }
+        } catch (error) {
+          showResponse(`Помилка мережі: ${error.message}`, 'error');
+        }
+      }
+
+      function testHealth() {
+        const url = `${apiUrl.value}/api/health`;
+        makeRequest(url);
+      }
+
+      function testCreateContact() {
+        const url = `${apiUrl.value}/api/contact`;
+        const data = {
+          name: name.value,
+          email: email.value,
+          message: message.value,
+        };
+
+        makeRequest(url, {
+          method: 'POST',
+          body: JSON.stringify(data),
+        });
+      }
+
+      function testGetContacts() {
+        const url = `${apiUrl.value}/api/contact?limit=5`;
+        makeRequest(url);
+      }
+
+      function testGetStats() {
+        const url = `${apiUrl.value}/api/contact/stats`;
+        makeRequest(url);
+      }
+
+      // Автоматичне тестування при завантаженні
+      window.addEventListener('load', () => {
+        showResponse('Сторінка завантажена. Готово до тестування API!', 'info');
+      });
+    </script>
+  </body>
+</html>
