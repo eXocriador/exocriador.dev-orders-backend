@@ -1,4 +1,4 @@
-const errorHandler = (err, req, res) => {
+const errorHandler = (err, req, res, _next) => {
   console.error('Error:', err);
 
   if (err.name === 'ValidationError') {
@@ -25,4 +25,11 @@ const errorHandler = (err, req, res) => {
   });
 };
 
-module.exports = { errorHandler };
+const notFoundHandler = (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route not found',
+  });
+};
+
+module.exports = { errorHandler, notFoundHandler };

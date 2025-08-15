@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const connectDB = require('./config/database');
 const contactRoutes = require('./routes/contactRoutes');
 const { corsMiddleware } = require('./middleware/cors');
-const { errorHandler } = require('./middleware/errorHandler');
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const { getEnvVar } = require('./utils/env');
 
 const app = express();
@@ -31,6 +31,9 @@ app.get('/api/health', (req, res) => {
     environment: getEnvVar('NODE_ENV', 'development'),
   });
 });
+
+// 404 handler
+app.use(notFoundHandler);
 
 // Обробка помилок
 app.use(errorHandler);
